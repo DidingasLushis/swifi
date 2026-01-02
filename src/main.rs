@@ -1,15 +1,23 @@
+mod speed;
 use clap::Parser;
 
-/// Wifi speed test cli
-/// test comment test comment (ment to be in the help message)
+/// A CLI tool for testing wifi download and upload speeds.
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct CliArgs {
-    /// check down
+    /// List available servers sorted by distance
+    #[arg(short, long)]
+    list: bool,
+
+    /// Specify a specific server ID to use
+    #[arg(short, long)]
+    server: Option<String>,
+
+    /// Perform a download speed test
     #[arg(short, long)]
     down: bool,
 
-    /// check up
+    /// Perform an upload speed test
     #[arg(short, long)]
     up: bool,
 }
@@ -17,20 +25,17 @@ struct CliArgs {
 fn main() {
     let args = CliArgs::parse();
 
+    if args.list {
+        if let Err(e) = speed::list_servers() {
+            eprintln!("Error: {}", e);
+        }
+        return;
+    }
+
     let run_downlaod = args.down || (!args.down && !args.up);
     let run_upload = args.up;
 
-    if let Err(e) = run_logic(run_downlaod, run_upload) {
+    if let Err(e) = speed::do_test(args.server, run_downlaod, run_upload) {
         eprintln!("Error: {}", e);
     }
-}
-
-fn run_logic(do_down: bool, do_up: bool) -> Result<(), String> {
-    if do_down {
-        println!("Checking download speed...");
-    }
-    if do_up {
-        println!("Checking upload speed...");
-    }
-    Ok(())
 }
